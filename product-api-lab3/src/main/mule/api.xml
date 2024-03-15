@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="api-config" api="resource::3a1f6da8-946c-45ef-ba52-c93009bc545d:sapi-products-db:1.0.0:raml:zip:api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <configuration-properties doc:name="Configuration properties" doc:id="07b9b887-4153-4f91-9f80-1b3020f63329" file="config\configuration.yaml" />
+	<db:config name="Products_Database_Configuration" doc:name="Database Config" doc:id="42ab7681-71d9-48e5-ab77-a5ede6d70569" >
+		<db:my-sql-connection host="${mysql.host}" port="${mysql.port}" user="${mysql.user}" password="${mysql.password}" database="${mysql.database}" />
+	</db:config>
+	<flow name="api-main">
+        <http:listener config-ref="api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND,VALIDATION:EMPTY_COLLECTION" enableNotifications="true" logException="true">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="api-console">
+        <http:listener config-ref="api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\product\(id):application\json:api-config">
+		<db:update doc:name="Update Product" doc:id="ffb7bca3-8a0e-4520-ad89-2345469223e7" config-ref="Products_Database_Configuration">
+			<db:sql ><![CDATA[update product
+set name = :name, description = :description, product_number = :productNumber, manufactured = :manufactured, colors = :colors,
+categories= :categories, stock = :stock, safety_stock_level = :safetyStockLevel, standard_cost = :standardCost, list_price = :listPrice, size = :size,
+size_unit_measure_code = :sizeUnitMeasureCode, weight = :weight, weight_unit_measure_code = :weightUnitMeasureCode, days_to_manufacture = :daysToManufacture,
+images = :images,  modified_date = CURDATE()
+where id = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+fun getManufacturedCode(value) = if (value == true) 1 else 0
+---
+{
+        id: attributes.uriParams.id,
+        categories: (payload.categories default []) joinBy ",",
+        colors: (payload.colors default []) joinBy ",",
+        daysToManufacture: payload.daysToManufacture,
+        description: payload.description,
+        images: (payload.images default []) joinBy ",",
+        listPrice: payload.listPrice,
+        manufactured: getManufacturedCode(payload.manufactured),
+        name: payload.name,
+        productNumber: payload.productNumber,
+        safetyStockLevel: payload.safetyStockLevel,
+        size: payload.size,
+        sizeUnitMeasureCode: payload.sizeUnitMeasureCode,
+        standardCost: payload.standardCost,
+        stock: payload.stock,
+        weight: payload.weight,
+        weightUnitMeasureCode: payload.weightUnitMeasureCode
+}]]]></db:input-parameters>
+		</db:update>
+		<logger level="INFO" doc:name="Logger" doc:id="a87b0618-04cb-46b4-8983-0b2ec6770ec9" message='#["Number of affected rows: " ++ ((payload.affectedRows default -1 )as String)]'/>
+    </flow>
+    <flow name="delete:\product\(id):application\json:api-config">
+		<db:delete doc:name="Delete Product" doc:id="4affac3b-95d8-4761-8155-639d23141971" config-ref="Products_Database_Configuration">
+			<db:sql ><![CDATA[delete from product where id=:id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+  id:attributes.uriParams.id
+}]]]></db:input-parameters>
+		</db:delete>
+		<logger level="INFO" doc:name="Logger" doc:id="200282b1-1064-435e-b7b4-18f5f0256bde" message='#["Number of records deleted: " ++ (payload as String)]'/>
+    </flow>
+    <flow name="get:\product\(id):api-config">
+		<db:select doc:name="Get Product By ID" doc:id="3accfb75-3325-4303-a99d-d67fda39352e" config-ref="Products_Database_Configuration">
+			<db:sql ><![CDATA[SELECT p.id, p.name, p.description, p.product_number, p.manufactured, p.colors, p.categories, p.stock, p.safety_stock_level, p.standard_cost, p.list_price, p.size, p.size_unit_measure_code, p.weight, p.weight_unit_measure_code, p.days_to_manufacture, p.images,  p.modified_date, p.created_date
+FROM product p
+WHERE p.id = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/java
+---
+{
+	id: attributes.uriParams.id 
+}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:id="9e2a688b-93cb-41f9-9b4a-3e7fd299d2d8" />
+		<ee:transform doc:name="Transform Message" doc:id="09670676-03e8-4686-bbbe-fbbe7b2da202" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var product = payload[0]
+---
+{
+	id: product.id,
+	name: product.name,
+	description: product.description,
+	manufactured: product.manufactured,
+	productNumber: product.product_number,
+	colors: (product.colors default "") splitBy "," ,
+	categories:(product.categories default "") splitBy "," ,
+	safetyStockLevel: product.safety_stock_level,
+	standardCost: (product.standard_cost default "0.0") as String {format: "##.##"} as Number,
+	listPrice: (product.list_price default "0.0") as String {format: "##.##"} as Number,
+	stock: product.stock,
+	safetyStockLevel: product.safety_stock_level,
+	daysToManufacture: product.days_to_manufacture,
+	size: product.size,
+	sizeUnitMeasureCode: product.size_unit_measure_code,
+	weight: product.weight,
+	weightUnitMeasureCode: product.weight_unit_measure_code,
+	daysToManufacture: product.days_to_manufacture,
+	images: (product.images default "") splitBy ",",
+	modifiedDate: (product.modified_date default "") as Date {format: "yyyy-MM-dd"},
+	createdDate: (product.created_date default "") as Date {format: "yyyy-MM-dd"}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+    <flow name="get:\product:api-config">
+        <db:select doc:name="Get Products" doc:id="acdc894f-d4f2-4ddc-9991-335130f7afa1" config-ref="Products_Database_Configuration">
+			<db:sql ><![CDATA[SELECT  p.id, p.name, p.description, p.product_number, p.manufactured, p.colors, p.categories, p.stock, p.safety_stock_level, p.standard_cost, p.list_price, p.size, p.size_unit_measure_code, p.weight, p.weight_unit_measure_code, p.days_to_manufacture, p.images,  p.modified_date, p.created_date
+FROM product p
+LIMIT 10]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map (product, index) -> {
+	id: product.id,
+    categories: (product.categories default "") splitBy ",",
+    colors: (product.colors default "") splitBy ",",
+    createdDate: product.created_date as String {format: "yyyy-MM-dd"},
+    modifiedDate: product.modified_date as String {format: "yyyy-MM-dd"},
+    safetyStockLevel: product.safety_stock_level as Number,
+    stock: product.stock as Number,
+    daysToManufacture: product.days_to_manufacture,
+    name: product.name,
+    description: product.description,
+    images: (product.images default "") splitBy ",",
+    listPrice: product.list_price,
+    manufactured: product.manufactured,
+    productNumber: product.product_number,
+    size: product.size,
+    sizeUnitMeasureCode: product.size_unit_measure_code,
+    standardCost: product.standard_cost,
+    weightUnitMeasureCode: product.weight_unit_measure_code,
+    weight: product.weight
+
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="post:\product:application\json:api-config">
+		<db:insert doc:name="Insert Product" doc:id="d173c984-27cf-400f-b6c3-9e2a5f705cb8" config-ref="Products_Database_Configuration" autoGenerateKeys="true" target="generated_key" targetValue="#[payload.generatedKeys.GENERATED_KEY]">
+			<db:sql ><![CDATA[INSERT INTO product(name, description, product_number, manufactured, colors, categories, stock, safety_stock_level, standard_cost, list_price, size, size_unit_measure_code, weight, weight_unit_measure_code, days_to_manufacture, images, modified_date, created_date)
+VALUES(:name, :description, :productNumber, :manufactured, :colors,  :categories, :stock, :safetyStockLevel, :standardCost, :listPrice, :size, :sizeUnitMeasureCode, :weight, :weightUnitMeasureCode, :daysToManufacture, :images,CURDATE(), CURDATE() );]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/json
+fun getManufacturedCode(value) = if (value == true) 1 else 0
+---
+{
+        categories: (payload.categories default []) joinBy ",",
+        colors: (payload.colors  default []) joinBy ",",
+        daysToManufacture: payload.daysToManufacture,
+        description: payload.description,
+        images: (payload.images  default []) joinBy ",",
+        listPrice: payload.listPrice,
+        manufactured: getManufacturedCode(payload.manufactured),
+        name: payload.name,
+        productNumber: payload.productNumber,
+        safetyStockLevel: payload.safetyStockLevel,
+        size: payload.size,
+        sizeUnitMeasureCode: payload.sizeUnitMeasureCode,
+        standardCost: payload.standardCost,
+        stock: payload.stock,
+        weight: payload.weight,
+        weightUnitMeasureCode: payload.weightUnitMeasureCode
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names >
+				<db:auto-generated-keys-column-name value="id" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="e3b55b67-e842-483e-8895-c4629b1893b7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ++
+id: vars.generated_key]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<tracking:custom-event doc:name="New Product Created Event" doc:id="3f3164b6-49ac-40f0-9046-2c5a3941be30" event-name="New Product Created Event">
+			<tracking:meta-data key="Product ID" value="#[payload.id]" />
+			<tracking:meta-data key="Product Name" value="#[payload.name]" />
+		</tracking:custom-event>
+    </flow>
+</mule>

@@ -1,0 +1,6 @@
+mysql:
+  host: "mythicalcorp.demos.mulesoft.com"
+  port: "3306"
+  user: "product"
+  password: "Mule1379"
+  database: "products_test"

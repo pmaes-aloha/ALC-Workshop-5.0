@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd ">
+    <munit:config name="sapi-products-db-apikit-test.xml" />
+    <http:request-config name="HTTP_Request_Configuration" basePath="/api">
+        <http:request-connection host="localhost" port="8081" />
+    </http:request-config>
+    <munit:test name="get:\product\(id):api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\product\(id):api-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="api-main" />
+            <munit:enable-flow-source value="get:\product\(id):api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-variable variableName="id" value="#['35']" doc:name="id" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="#['/product/$(vars.id)']">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:query-params>#[{}]</http:query-params>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_200_product_{id}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\product\(id):api-config-404-application\json-FlowTest" description="Verifying functionality of [get:\product\(id):api-config-404-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="api-main" />
+            <munit:enable-flow-source value="get:\product\(id):api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-variable variableName="id" value="#['35']" doc:name="id" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="#['/product/$(vars.id)']">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:query-params>#[{}]</http:query-params>
+                <http:response-validator>
+                    <http:success-status-code-validator values="404" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(404)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 404" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_404_product_{id}_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="put:\product\(id):application\json:api-config-204--FlowTest" description="Verifying functionality of [put:\product\(id):application\json:api-config-204-]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="api-main" />
+            <munit:enable-flow-source value="put:\product\(id):application\json:api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/put_product_{id}_application_json.json')]" />
+            <set-variable variableName="id" value="#['35']" doc:name="id" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="PUT" path="#['/product/$(vars.id)']">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:query-params>#[{}]</http:query-params>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(204)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 204" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\product:api-config-200-application\json-FlowTest" description="Verifying functionality of [get:\product:api-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="api-main" />
+            <munit:enable-flow-source value="get:\product:api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="f0104822-8fd5-49c8-9342-73c764385272" processor="db:select">
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[[{&#10;	id: 1,&#10;	name: "ELMO",&#10;	description: "Playskool sesame street play all day Elmo",&#10;	product_number: "UUID34234923934293",&#10;	manufactured: true,&#10;	safety_stock_level: 540,&#10;	standard_cost: 78,&#10;	list_price: 99.9,&#10;	size: "200x300",&#10;	size_unit_measure_code: "in",&#10;	weight_unit_measure_code: "gr",&#10;	weight: 400,&#10;	days_to_manufacture: 10,&#10;	categories: "playskool, sesame street",&#10;	stock: 2800,&#10;	colors: "blue, red, green",&#10;	images: "/wcsstore/HTSStorefrontAssetStore/Attachment/HomePage/Product_eSpots/Play-All-Day-Elmo.png",&#10;	created_date: now(),&#10;	modified_date: now()&#10;}, {&#10;	id: 2,&#10;	name: "ELMO",&#10;	description: "Playskool sesame street play all day Elmo",&#10;	product_number: "UUID34234923934293",&#10;	manufactured: true,&#10;	safety_stock_level: 540,&#10;	standard_cost: 78,&#10;	list_price: 99.9,&#10;	size: "200x300",&#10;	size_unit_measure_code: "in",&#10;	weight_unit_measure_code: "gr",&#10;	weight: 400,&#10;	days_to_manufacture: 10,&#10;	categories: "playskool, sesame street",&#10;	stock: 2800,&#10;	colors: "blue, red, green",&#10;	images: "/wcssatore/HTSStorefrontAssetStore/Attachment/HomePage/Product_eSpots/Play-All-Day-Elmo.png",&#10;	created_date: now(),&#10;	modified_date: now()&#10;}]]' mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/product">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:query-params>#[{}]</http:query-params>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression="#[payload[0].id]" is="#[MunitTools::equalTo(1)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\product:api-config-400-application\json-FlowTest" description="Verifying functionality of [get:\product:api-config-400-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="api-main" />
+            <munit:enable-flow-source value="get:\product:api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/product">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:query-params>#[{}]</http:query-params>
+                <http:response-validator>
+                    <http:success-status-code-validator values="400" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(400)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 400" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_400_product_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\product:api-config-404-application\json-FlowTest" description="Verifying functionality of [get:\product:api-config-404-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="api-main" />
+            <munit:enable-flow-source value="get:\product:api-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="GET" path="/product">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:query-params>#[{}]</http:query-params>
+                <http:response-validator>
+                    <http:success-status-code-validator values="404" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(404)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 404" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/get_404_product_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\product:application\json:api-config-201-application\json-FlowTest" description="Verifying functionality of [post:\product:application\json:api-config-201-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="api-main" />
+            <munit:enable-flow-source value="post:\product:application\json:api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/post_product_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="POST" path="/product">
+                <http:headers>#[{"Accept":"application/json","Content-Type":"application/json"}]</http:headers>
+                <http:query-params>#[{}]</http:query-params>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(201)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 201" />
+            <munit-tools:assert-that expression="#[output application/java ---write(payload, 'application/json') as String]" is="#[MunitTools::equalTo(MunitTools::getResourceAsString('scaffolder/response/post_201_product_application_json.json'))]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="delete:\product\(id):application\json:api-config-204--FlowTest" description="Verifying functionality of [delete:\product\(id):application\json:api-config-204-]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="api-main" />
+            <munit:enable-flow-source value="delete:\product\(id):application\json:api-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-variable variableName="id" value="#['35']" doc:name="id" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration" method="DELETE" path="#['/product/$(vars.id)']">
+                <http:query-params>#[{}]</http:query-params>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(204)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 204" />
+        </munit:validation>
+    </munit:test>
+</mule>
