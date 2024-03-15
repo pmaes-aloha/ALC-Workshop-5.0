@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.mule.tooling.MULE_PROJECT_LIB"/>
+	<classpathentry kind="con" path="MULE_LIB/com.mulesoft.munit/munit-runner/3.0.0"/>
+	<classpathentry kind="con" path="MULE_LIB/com.mulesoft.munit/munit-tools/3.0.0"/>
+	<classpathentry kind="con" path="MULE_LIB/org.mule.modules/mule-apikit-module/1.9.2"/>
+	<classpathentry kind="con" path="MULE_LIB/org.mule.connectors/mule-sockets-connector/1.2.3"/>
+	<classpathentry kind="con" path="org.mule.tooling.API_SPEC_LIB/3a1f6da8-946c-45ef-ba52-c93009bc545d/error-datatype/1.0.0"/>
+	<classpathentry kind="con" path="org.mule.tooling.API_SPEC_LIB/3a1f6da8-946c-45ef-ba52-c93009bc545d/omnichannel-datatype/1.0.0"/>
+	<classpathentry kind="con" path="org.mule.tooling.API_SPEC_LIB/3a1f6da8-946c-45ef-ba52-c93009bc545d/pageable-trait/1.0.0"/>
+	<classpathentry kind="con" path="org.mule.tooling.API_SPEC_LIB/3a1f6da8-946c-45ef-ba52-c93009bc545d/eapi-omnichannel-api/1.0.0"/>
+	<classpathentry kind="con" path="org.mule.tooling.API_SPEC_LIB/3a1f6da8-946c-45ef-ba52-c93009bc545d/client-id-secured-trait/1.0.0"/>
+	<classpathentry kind="con" path="org.mule.tooling.API_SPEC_LIB/3a1f6da8-946c-45ef-ba52-c93009bc545d/rest-headers-trait/1.0.0"/>
+	<classpathentry kind="con" path="MULE_LIB/org.mule.modules/mule-validation-module/2.0.5"/>
+	<classpathentry kind="con" path="MULE_LIB/org.mule.connectors/mule-objectstore-connector/1.2.1"/>
+	<classpathentry kind="con" path="MULE_LIB/org.mule.connectors/mule-http-connector/1.8.0"/>
+	<classpathentry kind="con" path="MULE_LIB/3a1f6da8-946c-45ef-ba52-c93009bc545d/mule-plugin-sapi-products-db/1.0.0"/>
+	<classpathentry kind="con" path="MULE_LIB/3a1f6da8-946c-45ef-ba52-c93009bc545d/mule-plugin-papi-order-fulfillment/1.0.0"/>
+	<classpathentry kind="con" path="MULE_LIB/3a1f6da8-946c-45ef-ba52-c93009bc545d/mule-plugin-sapi-order-dotnet/1.0.0"/>
+	<classpathentry exported="true" kind="con" path="MULE_RUNTIME/org.mule.tooling.server.4.5.ee"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="src/main/mule"/>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/main/resources"/>
+	<classpathentry kind="src" output="target/test-classes" path="src/test/java"/>
+	<classpathentry kind="src" output="target/test-classes" path="src/test/resources"/>
+	<classpathentry kind="src" path="src/test/munit"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>
